@@ -8,10 +8,10 @@ Clone/fork this repo to a github or other VCS account that is connected to your 
 ## aws-ecs-cloudfront-py
 
 - Modify `Pulumi.yaml` as follows:
-  - Replace `MitchellGerdisch` in the packages directive to reference the `component-aws-container-services-py` in your VCS repo.
+  - Replace `MitchellGerdisch` in the packages directive to use the correct path for the `component-aws-container-services-py` component in your VCS repo.
     - (Optional) If versioning the component (see below), add `@vX.Y.Z` where `vX.Y.Z` matches the component's repository tag (including the `v`).
   - Modify the runtime options as per your preferred Python tooling if you don't use pip.
-- 
+- run `pulumi install` and refer to the instructions on how to reference the component in `__main__.py`.
 
 ## component-aws-container-service
 These are optional steps and not required to get started: 
