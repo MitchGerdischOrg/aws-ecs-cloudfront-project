@@ -5,9 +5,10 @@ runtime:
   options:
     toolchain: pip
     virtualenv: venv
-config:
-  pulumi:tags:
-    value:
-      pulumi:template: aws-python
 packages:
-  container-services-py: github.com/pulumi-pequod/component-container-services-py@v1.0.0
+  # Without a version, the latest version of the component will be used
+  container-services-py: github.com/MitchellGerdisch/aws-ecs-cloudfront-project/component-container-services-py
+  # if versioning the component use this sort of nomenclature:
+  # container-services-py: github.com/MitchellGerdisch/aws-ecs-cloudfront-project/component-container-services-py@vX.Y.Z
+  # e.g. 
+  # container-services-py: github.com/MitchellGerdisch/aws-ecs-cloudfront-project/component-container-services-py@v1.0.0
