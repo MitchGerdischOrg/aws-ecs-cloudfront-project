@@ -3,7 +3,11 @@ Pulumi project that deploys to ECS with a Cloudfront CDN and uses a component re
 
 # Set Up Steps
 
-Clone/fork this repo to a github or other VCS account that is connected to your Pulumi org. 
+- Create an empty repo and clone it.
+- In the repo folder, run `pulumi new https://github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/tree/main/aws-ecs-cloudfront-py`
+  - You are prompted for the project name, description, stack name, and `agentPoolId`.
+  - `agentPoolId` is the Pulumi Deployments agent pool ID to run deployments on. Accept the default, `pulumi-provided-runners`, to use Pulumi Cloud hosted runners.
+  - Change it later with `pulumi config set agentPoolId <value>`.
  
 ## Set up the Component Packages
 
@@ -12,7 +16,7 @@ One abstracts the code for setting up the image, ECR and ECS deployment and the 
 Although the components can can be used as local components, for this exercise, it's recommended to manage it from a git repo.
 In this case it is assumed to be in the same repo as the main program, but as noted below, components are best managed in their own, dedicated repos to allow fine grained control of versions.
  
-From the Pulumi project folder, `aws-ecs-cloudfront-py`, run `pulumi package add` to install and set up the two component resource packages also included in this repo.
+From the Pulumi project folder created by `pulumi new`, run `pulumi package add` to install and set up the two component resource packages also included in this repo.
 
 - Run `pulumi package add https://GITREPO-PATH-TO-COMPONENT/component-aws-container-services` 
   - Use the correct path to the componet folder.
@@ -24,8 +28,8 @@ From the Pulumi project folder, `aws-ecs-cloudfront-py`, run `pulumi package add
 
 The `pulumi package add` command performs the following tasks:
   - It adds a packages directive to the `Pulumi.yaml` file.
-  - It creates an `sdks` folder which should NOT be committed to the repo.
-  - It provdes the import line for `__main__.py` to reference the generated SDKs.
+  - It creates an `sdks` folder which should **NOT** be committed to the repo.
+  - It provdes the import line to add to `__main__.py` to reference the generated SDKs.
 - SUBSEQUENTLY, you only need to run `pulumi install` which will use the `packages` directive in `Pulumi.yaml` to generate the local SDKs
 
 ## Version and Publish the Component Resources (optional)
@@ -53,8 +57,6 @@ In production, the deployment settings could be managed by a completely separate
 But for ease of use, this initial boostrapping approach is used.
 
 ```bash
-cd aws-ecs-cloudfront-py
-pulumi stack init PULUMI_ORG_NAME/dev
 pulumi install
 pulumi up
 ```

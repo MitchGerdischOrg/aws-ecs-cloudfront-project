@@ -1,13 +1,13 @@
-name: mrg-ecs-cloudfront-project
-description: ECR + ECS container fronted by CloudFront
+name: ${PROJECT}
+description: ${DESCRIPTION}
 runtime:
   name: python
   options:
     toolchain: pip
     virtualenv: venv
-    #packages:
-  # if versioning the component use this sort of nomenclature:
-  # container-services: https://github.com/MitchellGerdisch/component-aws-container-services@v1.0.0
-packages:
-  container-services: github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/component-aws-container-services
-  deployment-settings: github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/component-pulumi-deployment-settings
+template:
+  description: ECR + ECS container fronted by CloudFront, with Pulumi Deployments settings
+  config:
+    agentPoolId:
+      description: Pulumi Deployments agent pool ID, or 'pulumi-provided-runners' to use Pulumi Cloud hosted runners
+      default: pulumi-provided-runners
