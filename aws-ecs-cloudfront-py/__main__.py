@@ -3,8 +3,8 @@ and fronts the ALB with a CloudFront distribution."""
 
 import pulumi
 import pulumi_aws as aws
-import SEE_PACKAGE_INSTALL_INSTRUCTIONS as container_services
-import SEE_PACKAGE_INSTALL_INSTRUCTIONS as deployment_settings
+import mitchgerdischorg_container_services as container_services
+import mitchgerdischorg_deployment_settings as deployment_settings
 
 
 # Build the sample app image, push it to ECR, and deploy it to ECS behind an ALB.
@@ -61,21 +61,19 @@ distribution = aws.cloudfront.Distribution(
     ),
 )
 
-# Pulumi Deployments settings for this stack: preview on PRs and update on merges.
+# Pulumi Deployments settings for this stack: preview on PRs (update on push is off by default).
 # Anything not set in stack config is worked out by the component:
 #   repository     - 'owner/repo'; defaults to the local git 'origin' remote
 #   branch         - defaults to the checked-out branch
 #   repoDir        - defaults to this folder's path in the repo
-#   agentPoolId    - defaults to Pulumi Cloud hosted runners
-#   awsOidcRoleArn - AWS role to assume via OIDC; none by default
+#   agentPoolId    - required; a runner pool ID, or 'pulumi-provided-runners' for Pulumi Cloud hosted runners
 config = pulumi.Config()
 deployment = deployment_settings.StackDeploymentSettings(
     "deployment-settings",
     repository=config.get("repository"),
     branch=config.get("branch"),
     repo_dir=config.get("repoDir"),
-    agent_pool_id=config.get("agentPoolId"),
-    aws_oidc_role_arn=config.get("awsOidcRoleArn"),
+    agent_pool_id=config.require("agentPoolId"),
 )
 
 pulumi.export(

@@ -1,0 +1,3 @@
+config:
+  # Uses pulumi cloud runners
+  agentPoolId: pulumi-provided-runners

@@ -16,7 +16,8 @@ import yaml
 
 _DEFAULT_VCS_PROVIDER = "github"
 _DEFAULT_BRANCH = "main"
-_DEFAULT_OIDC_SESSION_NAME = "pulumi-deployments"
+# agent_pool_id value that selects Pulumi Cloud hosted runners instead of a customer-managed pool.
+PULUMI_PROVIDED_RUNNERS = "pulumi-provided-runners"
 
 
 def _git(*git_args: str) -> str | None:
@@ -96,7 +97,7 @@ class StackDeploymentSettingsArgs(TypedDict):
     """The folder within the repository that contains the project's Pulumi.yaml. Defaults to the program's folder in the local git checkout."""
 
     deploy_commits: pulumi.Input[bool] | None
-    """Run `pulumi up` when commits are pushed to the branch. Defaults to true."""
+    """Run `pulumi up` when commits are pushed to the branch. Defaults to false."""
 
     preview_pull_requests: pulumi.Input[bool] | None
     """Run `pulumi preview` when a pull request is opened against the branch. Defaults to true."""
@@ -105,7 +106,7 @@ class StackDeploymentSettingsArgs(TypedDict):
     """Only trigger deployments for changes under these repository paths (glob patterns). Defaults to the repo dir plus any local-path packages in Pulumi.yaml."""
 
     agent_pool_id: pulumi.Input[str] | None
-    """The ID of a customer-managed agent (runner) pool. Defaults to Pulumi-hosted runners."""
+    """The ID of a customer-managed agent (runner) pool, or 'pulumi-provided-runners' to use Pulumi Cloud hosted runners. Defaults to Pulumi-hosted runners."""
 
     executor_image: pulumi.Input[str] | None
     """A custom executor image, e.g. 'pulumi/pulumi-python:latest'. Defaults to the Pulumi-provided image."""
@@ -115,15 +116,6 @@ class StackDeploymentSettingsArgs(TypedDict):
 
     pre_run_commands: pulumi.Input[list[pulumi.Input[str]]] | None
     """Shell commands to run before the Pulumi operation executes."""
-
-    aws_oidc_role_arn: pulumi.Input[str] | None
-    """The ARN of an AWS IAM role to assume via OIDC during the deployment. OIDC is only configured when this is set."""
-
-    aws_oidc_session_name: pulumi.Input[str] | None
-    """The name of the AWS assume-role session. Defaults to 'pulumi-deployments'."""
-
-    aws_oidc_duration: pulumi.Input[str] | None
-    """The duration of the AWS assume-role session in 'XhYmZs' format, e.g. '1h0m0s'."""
 
 
 class StackDeploymentSettings(pulumi.ComponentResource):
@@ -163,17 +155,11 @@ class StackDeploymentSettings(pulumi.ComponentResource):
             _detect_trigger_paths
         )
 
-        # Only configure OIDC when a role is provided.
-        oidc = None
-        role_arn = args.get("aws_oidc_role_arn")
-        if role_arn is not None:
-            oidc = pulumiservice.OperationContextOIDCArgs(
-                aws=pulumiservice.AWSOIDCConfigurationArgs(
-                    role_arn=role_arn,
-                    session_name=arg("aws_oidc_session_name", _DEFAULT_OIDC_SESSION_NAME),
-                    duration=args.get("aws_oidc_duration"),
-                )
-            )
+        # An unset agent pool runs deployments on Pulumi Cloud hosted runners;
+        # 'pulumi-provided-runners' selects them explicitly.
+        agent_pool_id = pulumi.Output.from_input(args.get("agent_pool_id")).apply(
+            lambda pool: None if pool == PULUMI_PROVIDED_RUNNERS else pool
+        )
 
         executor_context = None
         executor_image = args.get("executor_image")
@@ -187,13 +173,12 @@ class StackDeploymentSettings(pulumi.ComponentResource):
             organization=organization,
             project=project,
             stack=stack,
-            # Leaving the agent pool unset runs deployments on Pulumi Cloud hosted runners.
-            agent_pool_id=args.get("agent_pool_id"),
+            agent_pool_id=agent_pool_id,
             executor_context=executor_context,
             vcs=pulumiservice.DeploymentSettingsVcsArgs(
                 provider=arg("vcs_provider", _DEFAULT_VCS_PROVIDER),
                 repository=repository,
-                deploy_commits=arg("deploy_commits", True),
+                deploy_commits=arg("deploy_commits", False),
                 preview_pull_requests=arg("preview_pull_requests", True),
                 paths=paths,
             ),
@@ -211,7 +196,6 @@ class StackDeploymentSettings(pulumi.ComponentResource):
             operation_context=pulumiservice.DeploymentSettingsOperationContextArgs(
                 environment_variables=args.get("environment_variables"),
                 pre_run_commands=args.get("pre_run_commands"),
-                oidc=oidc,
             ),
             opts=child_opts,
         )

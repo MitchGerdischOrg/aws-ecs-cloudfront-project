@@ -2,3 +2,4 @@
 venv/
 sdks/
 __pycache__/
+requirements.txt

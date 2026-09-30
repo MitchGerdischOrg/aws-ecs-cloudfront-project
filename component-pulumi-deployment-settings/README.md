@@ -2,7 +2,7 @@
 
 A Python multi-language Pulumi component package that configures [Pulumi Deployments](https://www.pulumi.com/docs/pulumi-cloud/deployments/) settings for a stack using the [Pulumi Cloud (pulumiservice) provider](https://www.pulumi.com/registry/packages/pulumiservice/).
 
-- `StackDeploymentSettings`: creates a `pulumiservice.DeploymentSettings` resource that wires a stack to a repository through a Pulumi Cloud VCS integration (GitHub by default), with optional push-to-deploy, PR previews, a customer-managed runner pool, environment variables, pre-run commands, and AWS OIDC.
+- `StackDeploymentSettings`: creates a `pulumiservice.DeploymentSettings` resource that wires a stack to a repository through a Pulumi Cloud VCS integration (GitHub by default), with PR previews, optional push-to-deploy, a customer-managed runner pool, environment variables, and pre-run commands.
 
 ## Prerequisites
 
@@ -38,8 +38,8 @@ settings = deployment_settings.StackDeploymentSettings(
     repository="my-github-org/aws-ecs-cloudfront-project",
     branch="main",
     repo_dir="aws-ecs-cloudfront-py",
-    agent_pool_id="<runner-pool-id>",            # customer-managed runners
-    aws_oidc_role_arn="arn:aws:iam::123456789012:role/pulumi-deployments",
+    agent_pool_id="<runner-pool-id>",            # customer-managed runners, or "pulumi-provided-runners"
+    deploy_commits=True,                         # run `pulumi up` on pushes (off by default)
 )
 
 pulumi.export("deployment_settings_stack", settings.stack_name)
@@ -78,16 +78,13 @@ environment_variables={
 | `vcsProvider` | `github` | `github`, `gitlab`, `bitbucket`, `azure_devops`, or `custom`. |
 | `branch` | checked-out branch, else `main` | Branch to deploy. |
 | `repoDir` | program's folder in the repo | Folder containing the project's `Pulumi.yaml`. |
-| `deployCommits` | `true` | Run `pulumi up` on pushes to the branch. |
+| `deployCommits` | `false` | Run `pulumi up` on pushes to the branch. |
 | `previewPullRequests` | `true` | Run `pulumi preview` on pull requests. |
 | `paths` | `repoDir` + local packages in `Pulumi.yaml` | Only trigger on changes under these paths. |
-| `agentPoolId` | Pulumi-hosted | Customer-managed runner pool ID. |
+| `agentPoolId` | Pulumi-hosted | Customer-managed runner pool ID, or `pulumi-provided-runners` to use Pulumi-hosted runners. |
 | `executorImage` | Pulumi default | Custom executor image. |
 | `environmentVariables` | | Env vars for the deployment. |
 | `preRunCommands` | | Shell commands run before the Pulumi operation. |
-| `awsOidcRoleArn` | | AWS role to assume via OIDC. OIDC is only configured when set. |
-| `awsOidcSessionName` | `pulumi-deployments` | AWS assume-role session name. |
-| `awsOidcDuration` | | AWS session duration, `XhYmZs` format. |
 
 | Output | Description |
 |--------|-------------|
