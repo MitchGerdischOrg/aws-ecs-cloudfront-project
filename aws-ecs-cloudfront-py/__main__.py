@@ -3,8 +3,9 @@ and fronts the ALB with a CloudFront distribution."""
 
 import pulumi
 import pulumi_aws as aws
-import pulumi_deployment_settings as deployment_settings
-import pulumi_container_services as container_services
+import SEE_PACKAGE_INSTALL_INSTRUCTIONS as container_services
+import SEE_PACKAGE_INSTALL_INSTRUCTIONS as deployment_settings
+
 
 # Build the sample app image, push it to ECR, and deploy it to ECS behind an ALB.
 app = container_services.AppImageDeploy(
