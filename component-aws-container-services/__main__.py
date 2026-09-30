@@ -8,6 +8,6 @@ from app_image_deploy import AppImageDeploy
 
 if __name__ == "__main__":
     component_provider_host(
-        name="container-services-py",
+        name="container-services",
         components=[AppImage, AppDeploy, AppImageDeploy],
     )
