@@ -9,5 +9,5 @@ runtime:
   # if versioning the component use this sort of nomenclature:
   # container-services: https://github.com/MitchellGerdisch/component-aws-container-services@v1.0.0
 packages:
-  container-services: github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/component-aws-container-services@199b5e4bb9d18b0d1b688c2cdee209fc2863bc46
-  deployment-settings: github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/component-pulumi-deployment-settings@199b5e4bb9d18b0d1b688c2cdee209fc2863bc46
+  container-services: github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/component-aws-container-services
+  deployment-settings: github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/component-pulumi-deployment-settings
