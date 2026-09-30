@@ -5,12 +5,15 @@ Pulumi project that deploys to ECS with a Cloudfront CDN and uses a component re
 
 Clone/fork this repo to a github or other VCS account that is connected to your Pulumi org. 
  
-## aws-ecs-cloudfront-py
- 
-This folder contains a component resource package that abstracts the code for setting up the image, ECR and ECS deployment.
-Although it can be used as a local component, for this exercise, it's recommended to manage it from a git repo.
+## Set up the Component Packages
+
+The repo contains two component resource packages in separate folders. 
+One abstracts the code for setting up the image, ECR and ECS deployment and the other abstracts the deploymnt settings.
+Although the components can can be used as local components, for this exercise, it's recommended to manage it from a git repo.
 In this case it is assumed to be in the same repo as the main program, but as noted below, components are best managed in their own, dedicated repos to allow fine grained control of versions.
  
+From the Pulumi project folder, `aws-ecs-cloudfront-py`, run `pulumi package add` to install and set up the two component resource packages also included in this repo.
+
 - Run `pulumi package add https://GITREPO-PATH-TO-COMPONENT/component-aws-container-services` 
   - Use the correct path to the componet folder.
     - If using version tags on the repo containing the component package, you can add `@vX.Y.Z` to the end of the path.

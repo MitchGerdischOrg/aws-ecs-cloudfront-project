@@ -5,6 +5,6 @@ runtime:
   options:
     toolchain: pip
     virtualenv: venv
-packages:
+#packages:
   # if versioning the component use this sort of nomenclature:
   # container-services: https://github.com/MitchellGerdisch/component-aws-container-services@v1.0.0
