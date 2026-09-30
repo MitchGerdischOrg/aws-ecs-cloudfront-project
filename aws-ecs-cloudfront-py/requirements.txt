@@ -1,3 +1,4 @@
 pulumi>=3.0.0,<4.0.0
 pulumi-aws>=7.0.0,<8.0.0
-sdks/mitchellgerdisch-container-services-py
+sdks/container-services
+sdks/deployment-settings

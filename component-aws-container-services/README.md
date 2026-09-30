@@ -16,16 +16,19 @@ The container is expected to listen on port 80.
 
 ```
 packages:
-  container-services-py: https://github.com/pulumi-pequod/component-container-services-py@v1.0.0
+  # versioning is optional
+  container-services-py: https://GITREPO-PATH/component-aws-container-services[@v1.0.0]
 ```
 
-Run `pulumi install` (or `pulumi package add https://github.com/pulumi-pequod/component-container-services-py@v1.0.0`) to generate the local SDK.
+Run `pulumi install` (or `pulumi package add https://GITREPO-PATH/component-aws-container-services[@v1.0.0]` - version is optional) to generate the local SDK.
+
+These commands will also provide the python import code for referencing the component.
 
 ### Python
 
 ```python
 import pulumi
-import pulumi_pequod_container_services_py as container_services
+import XXXX_aws_container_services_py as container_services
 
 app = container_services.AppImageDeploy(
     "app",
@@ -37,18 +40,6 @@ app = container_services.AppImageDeploy(
 pulumi.export("url", pulumi.Output.concat("http://", app.loadbalancer_dns_name))
 ```
 
-### YAML
-
-```yaml
-resources:
-  app:
-    type: container-services-py:AppImageDeploy
-    properties:
-      dockerFilePath: ./app
-outputs:
-  url: http://${app.loadbalancerDnsName}
-```
-
 ## Inputs and outputs
 
 | Component | Inputs | Outputs |
@@ -57,11 +48,3 @@ outputs:
 | `AppDeploy` | `imageReference` (required), `cpu`, `memory` | `loadbalancerDnsName` |
 | `AppImageDeploy` | `dockerFilePath` (required), `cpu`, `memory` | `loadbalancerDnsName` |
 
-## Development
-
-```bash
-python3 -m venv venv && . venv/bin/activate
-pip install -r requirements.txt
-pyright . && ruff check . && black --check .
-pulumi package get-schema .
-```
