@@ -7,8 +7,6 @@ runtime:
     virtualenv: venv
 packages:
   # Without a version, the latest version of the component will be used
-  container-services-py: github.com/MitchellGerdisch/aws-ecs-cloudfront-project/component-container-services-py
+  container-services-py: https://github.com/MitchellGerdisch/aws-ecs-cloudfront-project/component-aws-container-services-py
   # if versioning the component use this sort of nomenclature:
-  # container-services-py: github.com/MitchellGerdisch/aws-ecs-cloudfront-project/component-container-services-py@vX.Y.Z
-  # e.g. 
-  # container-services-py: github.com/MitchellGerdisch/aws-ecs-cloudfront-project/component-container-services-py@v1.0.0
+  # container-services-py: https://github.com/MitchellGerdisch/component-aws-container-services-py@v1.0.0
