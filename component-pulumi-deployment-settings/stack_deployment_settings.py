@@ -211,6 +211,9 @@ class StackDeploymentSettingsArgs(TypedDict):
     pre_run_commands: pulumi.Input[list[pulumi.Input[str]]] | None
     """Shell commands to run before the Pulumi operation executes."""
 
+    cache_dependencies: pulumi.Input[bool] | None
+    """Cache the program's dependencies (e.g. pip packages) between deployments. Defaults to true."""
+
 
 class StackDeploymentSettings(pulumi.ComponentResource):
     stack_name: pulumi.Output[str]
@@ -302,6 +305,9 @@ class StackDeploymentSettings(pulumi.ComponentResource):
                         lambda d: d or None
                     ),
                 )
+            ),
+            cache_options=pulumiservice.DeploymentSettingsCacheOptionsArgs(
+                enable=arg("cache_dependencies", True),
             ),
             operation_context=pulumiservice.DeploymentSettingsOperationContextArgs(
                 environment_variables=args.get("environment_variables"),

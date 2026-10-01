@@ -2,7 +2,7 @@
 
 A Python multi-language Pulumi component package that configures [Pulumi Deployments](https://www.pulumi.com/docs/pulumi-cloud/deployments/) settings for a stack using the [Pulumi Cloud (pulumiservice) provider](https://www.pulumi.com/registry/packages/pulumiservice/).
 
-- `StackDeploymentSettings`: creates a `pulumiservice.DeploymentSettings` resource that wires a stack to a repository through a Pulumi Cloud VCS integration (GitHub by default), with PR previews, optional push-to-deploy, a customer-managed runner pool, environment variables, and pre-run commands.
+- `StackDeploymentSettings`: creates a `pulumiservice.DeploymentSettings` resource that wires a stack to a repository through a Pulumi Cloud VCS integration (GitHub by default), with PR previews, optional push-to-deploy, a customer-managed runner pool, environment variables, pre-run commands, and dependency caching (on by default).
 
 ## Prerequisites
 
@@ -86,6 +86,7 @@ environment_variables={
 | `executorImage` | Pulumi default | Custom executor image. |
 | `environmentVariables` | | Env vars for the deployment. |
 | `preRunCommands` | | Shell commands run before the Pulumi operation. |
+| `cacheDependencies` | `true` | Cache the program's dependencies between deployments. |
 
 | Output | Description |
 |--------|-------------|
