@@ -27,6 +27,7 @@ The `pulumi package add` command performs the following tasks:
   - It adds a packages directive to the `Pulumi.yaml` file.
   - It creates an `sdks` folder. 
   - It updates `requirements.txt` or similar with the path to the SDKs. 
+    - **DO NOT** commit these changes to the repo. Let the `pulumi install` during launch restore local copies of the SDKs and update requirements.txt
   - It provdes the import line to add to `__main__.py` to reference the generated SDKs which you should add to the `__main__.py` file.
 
 *SUBSEQUENTLY*, you only need to run `pulumi install` which will use the `packages` directive in `Pulumi.yaml` to generate the local SDKs
