@@ -27,14 +27,16 @@ The `pulumi package add` command performs the following tasks:
   - It adds a packages directive to the `Pulumi.yaml` file.
   - It creates an `sdks` folder. 
   - It updates `requirements.txt` or similar with the path to the SDKs. 
-    - **DO NOT** commit these changes to the repo. Let the `pulumi install` during launch restore local copies of the SDKs and update requirements.txt
-  - It provdes the import line to add to `__main__.py` to reference the generated SDKs which you should add to the `__main__.py` file.
+  - It provides the import lines for the generated SDKs.
+    - **ADD** The import lines to `__main__.py`.
 
 *SUBSEQUENTLY*, you only need to run `pulumi install` which will use the `packages` directive in `Pulumi.yaml` to generate the local SDKs
 
-## Version and Publish the Component Resources (optional)
+## (Optional) Version and Publish the Component Resources 
 
-You can move the components into their own git repos and enable versioning and more centralized management of the components.
+You can skip these steps initially, and jump down to "Deploying the Stack" below.
+
+But, to better adopt centrally managed component packages, you can move the components into their own git repos and enable versioning and more centralized management of the components.
 If you do so, the Pulumi project code will need to be updated with the proper packages references and related sdk names.
 
 So after moving the components to git repos, you will want to run `pulumi package add` again but point it at the github repo.
@@ -53,15 +55,16 @@ You can also publish the package to the Pulumi Cloud component registry to be ab
   - Where `GITREPO_PATH_TO_COMPONENT` is the same path used for the `pulumi package add` command.
   - Where `PULUMI_ORG_NAME` is the name of your Pulumi org.
 
+# Deploying the Stack
 
-# Runtime Prerequisites
+##  Runtime Prerequisites
 
 Whereever `pulumi up` is run (laptop, deployment runner, etc) the following needs to be available:
 - docker is running: Used to build the image pushed to ECR and deployed to ECS.
 - AWS credentials/access with applicable permissions.
 - Your preferred python tooling is available.
 
-# Initializing and Bootstrapping Deployments
+## Initializing and Bootstrapping Deployments
 
 This project is set up such that it requires an initial pulumi up from a laptop to bootstrap the deployment settings using the deployment settings component resource.
 In production, the deployment settings could be managed by a completely separate stack that manages the deployment settings for multiple stacks using the same sort of logic captured in the component resource.
