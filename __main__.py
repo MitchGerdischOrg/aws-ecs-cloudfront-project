@@ -62,6 +62,7 @@ distribution = aws.cloudfront.Distribution(
 # Pulumi Deployments settings for this stack: preview on PRs (update on push is off by default).
 # Anything not set in stack config is worked out by the component:
 #   repository     - 'owner/repo'; defaults to the local git 'origin' remote
+#   installationId - VCS integration (GitHub account) ID; set when the org has several GitHub integrations
 #   branch         - defaults to the checked-out branch
 #   repoDir        - defaults to this folder's path in the repo
 #   agentPoolId    - required; a runner pool ID, or 'pulumi-provided-runners' for Pulumi Cloud hosted runners
@@ -69,6 +70,7 @@ config = pulumi.Config()
 deployment = deployment_settings.StackDeploymentSettings(
     "deployment-settings",
     repository=config.get("repository"),
+    installation_id=config.get("installationId"),
     branch=config.get("branch"),
     repo_dir=config.get("repoDir"),
     agent_pool_id=config.require("agentPoolId"),

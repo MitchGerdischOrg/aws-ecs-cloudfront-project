@@ -5,9 +5,11 @@ of the calling program. The component provider process runs in the program's dir
 commands and Pulumi.yaml reads here see the program's repo, not this package's.
 """
 
+import json
 import os
 import posixpath
 import subprocess
+import urllib.request
 from typing import TypedDict
 
 import pulumi
@@ -74,6 +76,95 @@ def _detect_trigger_paths(repo_dir: str) -> list[str]:
     return paths
 
 
+def _pulumi_credentials() -> tuple[str, str] | None:
+    """Returns (api_url, access_token) for the current Pulumi Cloud login, or None if unavailable."""
+    api_url = os.environ.get("PULUMI_BACKEND_URL")
+    token = os.environ.get("PULUMI_ACCESS_TOKEN")
+    if not api_url or not token:
+        try:
+            path = os.path.join(
+                os.environ.get("PULUMI_HOME") or os.path.expanduser("~/.pulumi"),
+                "credentials.json",
+            )
+            with open(path) as f:
+                creds = json.load(f)
+        except (OSError, ValueError):
+            creds = {}
+        api_url = api_url or creds.get("current")
+        token = token or (creds.get("accessTokens") or {}).get(api_url or "")
+    if not api_url or not token:
+        return None
+    return api_url.rstrip("/"), token
+
+
+def _list_vcs_integrations(organization: str) -> list[dict]:
+    """Lists the org's VCS integrations from Pulumi Cloud.
+
+    Tries the Pulumi CLI first (it already has the login and trusted certificates), then falls back
+    to calling the API directly with the stored credentials. Raises OSError/ValueError on failure.
+    """
+    try:
+        result = subprocess.run(
+            [
+                "pulumi",
+                "api",
+                "ListAllVCSIntegrations",
+                "-F",
+                f"orgName={organization}",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+        return json.loads(result.stdout).get("integrations") or []
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+
+    creds = _pulumi_credentials()
+    if creds is None:
+        raise OSError("no Pulumi Cloud credentials found")
+    api_url, token = creds
+    request = urllib.request.Request(
+        f"{api_url}/api/console/orgs/{organization}/integrations",
+        headers={
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.pulumi+8",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=15) as response:
+        return json.load(response).get("integrations") or []
+
+
+def _detect_installation_id(
+    organization: str, vcs_provider: str, repository: str
+) -> str | None:
+    """Finds the org's VCS integration whose account matches the repository owner.
+
+    Pulumi Cloud lists the integrations (e.g. one per GitHub account) installed in the org. When the
+    org has several of the same provider, the one named after the repository owner is the right one.
+    Returns None if the lookup is unavailable or nothing matches, so the service's own resolution
+    applies.
+    """
+    owner = repository.split("/")[0].lower()
+    if not owner:
+        return None
+    try:
+        integrations = _list_vcs_integrations(organization)
+    except (OSError, ValueError) as e:
+        pulumi.log.warn(
+            f"Could not list VCS integrations to detect installation_id: {e}"
+        )
+        return None
+    for integration in integrations:
+        if (
+            integration.get("vcsProvider") == vcs_provider
+            and str(integration.get("name", "")).lower() == owner
+        ):
+            return integration.get("id")
+    return None
+
+
 class StackDeploymentSettingsArgs(TypedDict):
     repository: pulumi.Input[str] | None
     """The repository to deploy from, e.g. 'my-org/my-repo' for GitHub. Defaults to the local git 'origin' remote."""
@@ -89,6 +180,9 @@ class StackDeploymentSettingsArgs(TypedDict):
 
     vcs_provider: pulumi.Input[str] | None
     """The VCS integration to use: 'github' (default), 'gitlab', 'bitbucket', 'azure_devops' or 'custom'. The integration must already be set up in the Pulumi org."""
+
+    installation_id: pulumi.Input[str] | None
+    """The ID of the VCS integration (e.g. the GitHub account) to use. Defaults to the org's integration of the same provider whose account name matches the repository owner; if none matches, Pulumi Cloud picks one."""
 
     branch: pulumi.Input[str] | None
     """The branch to deploy. Defaults to the locally checked-out branch, else 'main'."""
@@ -149,6 +243,21 @@ class StackDeploymentSettings(pulumi.ComponentResource):
                 f"{name}: could not determine the repository from git in {os.getcwd()}; "
                 "set the 'repository' input."
             )
+        vcs_provider = arg("vcs_provider", _DEFAULT_VCS_PROVIDER)
+
+        # With several integrations of one provider (e.g. multiple GitHub accounts), pick the one
+        # matching the repository owner. Only possible when the inputs are plain strings.
+        installation_id = args.get("installation_id")
+        if (
+            installation_id is None
+            and isinstance(organization, str)
+            and isinstance(repository, str)
+            and isinstance(vcs_provider, str)
+        ):
+            installation_id = _detect_installation_id(
+                organization, vcs_provider, repository
+            )
+
         branch = arg("branch") or _detect_branch() or _DEFAULT_BRANCH
         repo_dir = arg("repo_dir", _detect_repo_dir())
         paths = arg("paths") or pulumi.Output.from_input(repo_dir).apply(
@@ -176,8 +285,9 @@ class StackDeploymentSettings(pulumi.ComponentResource):
             agent_pool_id=agent_pool_id,
             executor_context=executor_context,
             vcs=pulumiservice.DeploymentSettingsVcsArgs(
-                provider=arg("vcs_provider", _DEFAULT_VCS_PROVIDER),
+                provider=vcs_provider,
                 repository=repository,
+                installation_id=installation_id,
                 deploy_commits=arg("deploy_commits", False),
                 preview_pull_requests=arg("preview_pull_requests", True),
                 paths=paths,

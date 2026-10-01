@@ -53,6 +53,7 @@ Anything not passed in is filled from the local git checkout of the calling prog
 - `branch`: the checked-out branch. On a detached HEAD it uses the remote's default branch, and falls back to `main`.
 - `repoDir`: the program folder's path relative to the repo root.
 - `paths`: `repoDir/**`, plus the folder of every local-path (`./` or `../`) package in `Pulumi.yaml` that is inside the repo, so changes to in-repo components also trigger deployments.
+- `installationId`: when the Pulumi org has several VCS integrations of the same provider (e.g. multiple GitHub accounts), the integration whose account name matches the repository owner. This is looked up through the Pulumi Cloud API using the current login (`PULUMI_ACCESS_TOKEN` or `~/.pulumi/credentials.json`). If the lookup fails or nothing matches, the input is left unset and Pulumi Cloud chooses. Pass `installation_id` to override.
 
 Because `branch` follows the checkout, running `pulumi up` from a feature branch changes the deployment branch. Pass `branch` explicitly to keep it fixed. If no repository can be detected (no git or no `origin` remote), the component fails and asks for `repository`.
 

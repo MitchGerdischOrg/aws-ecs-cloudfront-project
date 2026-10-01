@@ -4,7 +4,7 @@ Pulumi project that deploys to ECS with a Cloudfront CDN and uses a component re
 # Set Up Steps
 
 - Create an empty repo and clone it.
-- In the repo folder, run `pulumi new https://github.com/MitchGerdischOrg/aws-ecs-cloudfront-project/tree/main/aws-ecs-cloudfront-py`
+- In the repo folder, run `pulumi new https://github.com/MitchGerdischOrg/aws-ecs-cloudfront-template`
   - You are prompted for the project name, description, stack name, and `agentPoolId`.
   - `agentPoolId` is the Pulumi Deployments agent pool ID to run deployments on. Accept the default, `pulumi-provided-runners`, to use Pulumi Cloud hosted runners.
   - Change it later with `pulumi config set agentPoolId <value>`.
@@ -13,34 +13,44 @@ Pulumi project that deploys to ECS with a Cloudfront CDN and uses a component re
 
 The repo contains two component resource packages in separate folders. 
 One abstracts the code for setting up the image, ECR and ECS deployment and the other abstracts the deploymnt settings.
-Although the components can can be used as local components, for this exercise, it's recommended to manage it from a git repo.
-In this case it is assumed to be in the same repo as the main program, but as noted below, components are best managed in their own, dedicated repos to allow fine grained control of versions.
+Although the components can can be used as locally referenced components, for this exercise, we will work with them as component packages.
+
+Initially, we will install them as local component packages, but later discuss managing them in git repos with semantic versioning.
  
-From the Pulumi project folder created by `pulumi new`, run `pulumi package add` to install and set up the two component resource packages also included in this repo.
+From the Pulumi project folder (where `pulumi new` created the project), run `pulumi package add` to install and set up the two component resource packages. 
 
-- Run `pulumi package add https://GITREPO-PATH-TO-COMPONENT/component-aws-container-services` 
-  - Use the correct path to the componet folder.
-    - If using version tags on the repo containing the component package, you can add `@vX.Y.Z` to the end of the path.
+- Run `pulumi package add ./component-aws-container-services`
 
-- Run `pulumi package add https://GITREPO-PATH-TO-COMPONENT/component-pulumi-deployment-settings` 
-  - Use the correct path to the componet folder.
-    - If using version tags on the repo containing the component package, you can add `@vX.Y.Z` to the end of the path.
+- Run `pulumi package add ./component-pulumi-deployment-settings`
 
 The `pulumi package add` command performs the following tasks:
   - It adds a packages directive to the `Pulumi.yaml` file.
-  - It creates an `sdks` folder which should **NOT** be committed to the repo.
-  - It provdes the import line to add to `__main__.py` to reference the generated SDKs.
-- SUBSEQUENTLY, you only need to run `pulumi install` which will use the `packages` directive in `Pulumi.yaml` to generate the local SDKs
+  - It creates an `sdks` folder. 
+  - It updates `requirements.txt` or similar with the path to the SDKs. 
+  - It provdes the import line to add to `__main__.py` to reference the generated SDKs which you should add to the `__main__.py` file.
+
+*SUBSEQUENTLY*, you only need to run `pulumi install` which will use the `packages` directive in `Pulumi.yaml` to generate the local SDKs
 
 ## Version and Publish the Component Resources (optional)
 
-The following steps are optional and not required to get started: 
-- For versioning purposes, it is recommmended that a component is in its own repo. Then you can manage semantic versioning by adding tags to the repo of the form `vX.Y.Z`.
-  - If in a separate repo, the `pulumi packages` reference needs to be updated to point to the repo and not local folder.
-- Publish the package to the Pulumi component registry to be able to track usage of the and auto generate API docs.
-  - `pulumi package publish GITREPO_PATH_TO_COMPONENNT --publisher PULUMI_ORG_NAME`
-    - Where `GITREPO_PATH_TO_COMPONENT` is the same path used for the `pulumi package add` command.
-    - Where `PULUMI_ORG_NAME` is the name of your Pulumi org.
+You can move the components into their own git repos and enable versioning and more centralized management of the components.
+If you do so, the Pulumi project code will need to be updated with the proper packages references and related sdk names.
+
+So after moving the components to git repos, you will want to run `pulumi package add` again but point it at the github repo.
+For example: `pulumi package add https://GITREPO-PATH-TO-COMPONENT/component-aws-container-services`
+and similarly for the deployment-settings component.
+
+As before the `pulumi package add` command will udpate `Pulumi.yaml` and provide the import lines for `__main__.py`. You will need to clean up `Pulumi.yaml` to remove the local component references and update `__main__.py` with the new import lines.
+
+Once the components are in their own repos, you can set up versioning for the components:
+- Tag the repo with version(s) of the form `vX.Y.Z`.
+- In the `packages` directive in `Pulumi.yaml` add `@vX.Y.Z` to use the specific version of the component. 
+- Run `pulumi install` before `pulumi up` to udpate to the given version. 
+
+You can also publish the package to the Pulumi Cloud component registry to be able to track usage of the and auto generate API docs.
+- Publish the package: `pulumi package publish GITREPO_PATH_TO_COMPONENNT --publisher PULUMI_ORG_NAME`
+  - Where `GITREPO_PATH_TO_COMPONENT` is the same path used for the `pulumi package add` command.
+  - Where `PULUMI_ORG_NAME` is the name of your Pulumi org.
 
 
 # Runtime Prerequisites
@@ -60,6 +70,18 @@ But for ease of use, this initial boostrapping approach is used.
 pulumi install
 pulumi up
 ```
+
+# Running from Deployments
+
+**BE SURE** to push the code to the repo you created for the new project before trying to run from Pulumi deployments.
+
+From the Pulumi UI, use the `Actions` button in the upper right when viewing the stack to run udpates, previews, etc.
+
+You can also set things up to run deployments automatically for various conditions:
+- Scheduled events such as drift detection or shut down, etc.
+- Run previews when a PR is created.
+- Run updates when a PR is merged.
+
 
 
 
